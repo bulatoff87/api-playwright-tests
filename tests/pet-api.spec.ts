@@ -1,7 +1,7 @@
 ﻿import { randomInt } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 
-test('GET /pet/{petId}: возвращает созданного питомца', async ({ request }) => {
+test('GET /pet/{petId}: возвращает созданного питомца @pet @regression', async ({ request }) => {
   const pet = {
     id: randomInt(1_000_000_000_000, 281_474_976_710_655),
     name: 'Test pet',
@@ -25,7 +25,7 @@ test('GET /pet/{petId}: возвращает созданного питомца
   }
 });
 
-test('GET /pet/{petId}: возвращает 404 для отсутствующего питомца', async ({ request }) => {
+test('GET /pet/{petId}: возвращает 404 для отсутствующего питомца @pet @regression', async ({ request }) => {
   const missingPetId = -randomInt(1_000_000_000_000, 281_474_976_710_655);
   const response = await request.get(`pet/${missingPetId}`);
 

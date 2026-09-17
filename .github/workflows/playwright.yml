@@ -1,18 +1,50 @@
-name: Playwright API tests
+name: Petstore tests
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  api-tests:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check out pinned original server source
+        uses: actions/checkout@v6
+        with:
+          repository: swagger-api/swagger-petstore
+          ref: d57941e8fe959e508796b27469b1e8bba73392dc
+          path: .upstream
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: unit/pom.xml
+      - name: Run isolated server unit tests
+        run: mvn --batch-mode --no-transfer-progress -f unit/pom.xml test
+      - name: Upload unit test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-results
+          path: unit/target/surefire-reports/
+          retention-days: 30
+
+  api:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [smoke, regression]
 
     steps:
       - name: Check out repository
@@ -31,12 +63,14 @@ jobs:
         run: npm run typecheck
 
       - name: Run API tests
-        run: npx playwright test
+        run: npm run test:${{ matrix.suite }}
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: api-${{ matrix.suite }}-report
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 30
