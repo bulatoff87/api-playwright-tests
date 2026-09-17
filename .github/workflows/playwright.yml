@@ -22,7 +22,7 @@ jobs:
           repository: swagger-api/swagger-petstore
           ref: d57941e8fe959e508796b27469b1e8bba73392dc
           path: .upstream
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -32,7 +32,7 @@ jobs:
         run: mvn --batch-mode --no-transfer-progress -f unit/pom.xml test
       - name: Upload unit test results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: unit-results
           path: unit/target/surefire-reports/
@@ -45,29 +45,23 @@ jobs:
       fail-fast: false
       matrix:
         suite: [smoke, regression]
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
-
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
       - name: Check types
         run: npm run typecheck
-
       - name: Run API tests
         run: npm run test:${{ matrix.suite }}
-
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: api-${{ matrix.suite }}-report
           path: |
